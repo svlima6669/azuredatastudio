@@ -26,11 +26,11 @@ export class ConfigurePythonDialog extends Dialog {
 		await this.code.waitAndClick(newPythonInstallation);
 
 		const nextButton = '.modal-dialog .modal-content .modal-footer .right-footer .footer-button a[aria-label="Next"][aria-disabled="false"]';
-		await this.code.waitForElement(nextButton);
+		await this.code.waitAndClick(nextButton);
 		await this.code.dispatchKeybinding('enter');
 
 		const installButton = '.modal-dialog .modal-content .modal-footer .right-footer .footer-button a[aria-label="Install"][aria-disabled="false"]';
-		await this.code.waitForElement(installButton);
+		await this.code.waitAndClick(installButton);
 		await this.code.dispatchKeybinding('enter');
 
 		await this.waitForDialogGone();
