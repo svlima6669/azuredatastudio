@@ -19,16 +19,17 @@ export class ConfigurePythonDialog extends Dialog {
 	}
 
 	async installPython(): Promise<void> {
-		const dialog = '.modal .modal-dialog';
-		await this.code.waitAndClick(dialog);
+		const dialog = '.modal .modal-dialog .modal-content';
+		const newPythonInstallation = `${dialog} .modal-body input[aria-label="New Python installation"]`;
+		const dialogButton = `${dialog} .modal-footer .right-footer .footer-button:not(.dialogModal-hidden)`;
+		const nextButton = `${dialogButton} a[aria-label="Next"]`;
+		const installButton = `${dialogButton} a[aria-label="Install"]`;
 
-		const newPythonInstallation = '.modal .modal-body input[aria-label="New Python installation"]';
+		// Page 1
 		await this.code.waitAndClick(newPythonInstallation);
-
-		const nextButton = '.modal-dialog .modal-content .modal-footer .right-footer .footer-button a[aria-label="Next"][aria-disabled="false"]';
 		await this.code.waitAndClick(nextButton);
 
-		const installButton = '.modal-dialog .modal-content .modal-footer .right-footer .footer-button a[aria-label="Install"][aria-disabled="false"]';
+		// Page 2
 		await this.code.waitAndClick(installButton);
 
 		await this.waitForDialogGone();
