@@ -27,11 +27,9 @@ export class ConfigurePythonDialog extends Dialog {
 
 		const nextButton = '.modal-dialog .modal-content .modal-footer .right-footer .footer-button a[aria-label="Next"][aria-disabled="false"]';
 		await this.code.waitAndClick(nextButton);
-		await this.code.dispatchKeybinding('enter');
 
 		const installButton = '.modal-dialog .modal-content .modal-footer .right-footer .footer-button a[aria-label="Install"][aria-disabled="false"]';
 		await this.code.waitAndClick(installButton);
-		await this.code.dispatchKeybinding('enter');
 
 		await this.waitForDialogGone();
 		return this._waitForInstallationComplete();
