@@ -5,12 +5,12 @@
 
 import { nb } from 'azdata';
 import { localize } from 'vs/nls';
-import { URI } from 'vs/base/common/uri';
+import { URI, UriComponents } from 'vs/base/common/uri';
 import { Registry } from 'vs/platform/registry/common/platform';
 
 import {
 	INotebookService, INotebookManager, INotebookProvider,
-	DEFAULT_NOTEBOOK_FILETYPE, INotebookEditor, SQL_NOTEBOOK_PROVIDER, INavigationProvider, ILanguageMagic, NavigationProviders, unsavedBooksContextKey
+	DEFAULT_NOTEBOOK_FILETYPE, INotebookEditor, SQL_NOTEBOOK_PROVIDER, INavigationProvider, ILanguageMagic, NavigationProviders, unsavedBooksContextKey, INotebookOpenOptions
 } from 'sql/workbench/services/notebook/browser/notebookService';
 import { RenderMimeRegistry } from 'sql/workbench/services/notebook/browser/outputs/registry';
 import { standardRendererFactories } from 'sql/workbench/services/notebook/browser/outputs/factories';
@@ -36,7 +36,17 @@ import { onUnexpectedError } from 'vs/base/common/errors';
 import { notebookConstants } from 'sql/workbench/services/notebook/browser/interfaces';
 import { IContextKeyService } from 'vs/platform/contextkey/common/contextkey';
 import { IProductService } from 'vs/platform/product/common/productService';
+import { viewColumnToEditorGroup } from 'vs/workbench/api/common/shared/editor';
+import { ITextEditorOptions } from 'vs/platform/editor/common/editor';
+import { UntitledTextEditorInput } from 'vs/workbench/services/untitled/common/untitledTextEditorInput';
 
+import * as path from 'vs/base/common/path';
+
+import { IEditorService } from 'vs/workbench/services/editor/common/editorService';
+import { IUntitledTextEditorService } from 'vs/workbench/services/untitled/common/untitledTextEditorService';
+import { IEditorGroupsService } from 'vs/workbench/services/editor/common/editorGroupsService';
+
+import { IEditorInput, IEditorPane } from 'vs/workbench/common/editor';
 export interface NotebookProviderProperties {
 	provider: string;
 	fileExtensions: string[];
@@ -120,7 +130,10 @@ export class NotebookService extends Disposable implements INotebookService {
 		@ILogService private readonly _logService: ILogService,
 		@IQueryManagementService private readonly _queryManagementService: IQueryManagementService,
 		@IContextKeyService private contextKeyService: IContextKeyService,
-		@IProductService private readonly productService: IProductService
+		@IProductService private readonly productService: IProductService,
+		@IEditorService private _editorService: IEditorService,
+		@IUntitledTextEditorService private _untitledEditorService: IUntitledTextEditorService,
+		@IEditorGroupsService private _editorGroupService: IEditorGroupsService
 	) {
 		super();
 		this._providersMemento = new Memento('notebookProviders', this._storageService);
@@ -163,8 +176,52 @@ export class NotebookService extends Disposable implements INotebookService {
 		lifecycleService.onWillShutdown(() => this.shutdown());
 	}
 
-	public dispose(): void {
-		super.dispose();
+	public async openNotebook(resource: UriComponents, options: INotebookOpenOptions): Promise<IEditorPane | undefined> {
+		const uri = URI.revive(resource);
+
+		const editorOptions: ITextEditorOptions = {
+			preserveFocus: options.preserveFocus,
+			pinned: !options.preview
+		};
+		let isUntitled: boolean = uri.scheme === Schemas.untitled;
+
+		let fileInput: IEditorInput;
+		if (isUntitled && path.isAbsolute(uri.fsPath)) {
+			const model = this._untitledEditorService.create({ associatedResource: uri, mode: 'notebook', initialValue: options.initialContent });
+			fileInput = this._instantiationService.createInstance(UntitledTextEditorInput, model);
+		} else {
+			if (isUntitled) {
+				const model = this._untitledEditorService.create({ untitledResource: uri, mode: 'notebook', initialValue: options.initialContent });
+				fileInput = this._instantiationService.createInstance(UntitledTextEditorInput, model);
+			} else {
+				fileInput = this._editorService.createEditorInput({ forceFile: true, resource: uri, mode: 'notebook' });
+			}
+		}
+
+		/**
+		 * TODO: Handle the options below
+		 * 1. Default kernel
+		 * 2. Connection Profile
+		 * 3. Initial Dirty State (this one possibly just by calling fileInput.resolve() and then setting dirty state?)
+		let input: NotebookInput;
+		if (isUntitled) {
+			input = this._instantiationService.createInstance(UntitledNotebookInput, path.basename(uri.fsPath), uri, fileInput as UntitledTextEditorInput);
+		} else {
+			input = this._instantiationService.createInstance(FileNotebookInput, path.basename(uri.fsPath), uri, fileInput as FileEditorInput);
+		}
+		input.defaultKernel = options.defaultKernel;
+		input.connectionProfile = new ConnectionProfile(this._capabilitiesService, options.connectionProfile);
+		if (isUntitled) {
+			let untitledModel = await (input as UntitledNotebookInput).textInput.resolve();
+			await untitledModel.load();
+			input.untitledEditorModel = untitledModel;
+			if (options.initialDirtyState === false) {
+				(input.untitledEditorModel as UntitledTextEditorModel).setDirty(false);
+			}
+		}
+		 */
+
+		return await this._editorService.openEditor(fileInput, editorOptions, viewColumnToEditorGroup(this._editorGroupService, options.position));
 	}
 
 	private updateSQLRegistrationWithConnectionProviders() {
