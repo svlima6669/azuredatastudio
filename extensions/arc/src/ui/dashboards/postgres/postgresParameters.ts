@@ -47,8 +47,7 @@ export abstract class PostgresParametersPage extends DashboardPage {
 		this.initializeSearchBox();
 
 		this.disposables.push(
-			this._postgresModel.onConfigUpdated(() => this.eventuallyRunOnInitialized(() => this.handleServiceUpdated())),
-			this._postgresModel.onEngineSettingsUpdated(() => this.eventuallyRunOnInitialized(() => this.refreshParametersTable()))
+			this._postgresModel.onConfigUpdated(() => this.eventuallyRunOnInitialized(() => this.handleServiceUpdated()))
 		);
 	}
 
@@ -312,6 +311,7 @@ export abstract class PostgresParametersPage extends DashboardPage {
 				this.searchBox.enabled = true;
 				this.resetAllButton.enabled = true;
 				this.parameterContainer.clearItems();
+				this.refreshParametersTable();
 				this.parameterContainer.addItem(this._parametersTable);
 			})
 		);
@@ -628,6 +628,7 @@ export abstract class PostgresParametersPage extends DashboardPage {
 			this.parametersTableLoading!.loading = false;
 		} else if (this._postgresModel.engineSettingsLastUpdated) {
 			await this.callGetEngineSettings();
+			this.refreshParametersTable();
 			this.discardButton.enabled = false;
 			this.saveButton.enabled = false;
 		}
