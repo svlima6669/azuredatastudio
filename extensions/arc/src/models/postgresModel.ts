@@ -33,9 +33,7 @@ export class PostgresModel extends ResourceModel {
 	private readonly _azdataApi: azdataExt.IExtension;
 
 	private readonly _onConfigUpdated = new vscode.EventEmitter<azdataExt.PostgresServerShowResult>();
-	//public readonly _onEngineSettingsUpdated = new vscode.EventEmitter<EngineSettingsModel[]>();
 	public onConfigUpdated = this._onConfigUpdated.event;
-	//public onEngineSettingsUpdated = this._onEngineSettingsUpdated.event;
 	public configLastUpdated?: Date;
 	public engineSettingsLastUpdated?: Date;
 
@@ -186,7 +184,6 @@ export class PostgresModel extends ResourceModel {
 		});
 
 		this.engineSettingsLastUpdated = new Date();
-		//this._onEngineSettingsUpdated.fire(this.workerNodesEngineSettings);
 	}
 
 	protected createConnectionProfile(): azdata.IConnectionProfile {

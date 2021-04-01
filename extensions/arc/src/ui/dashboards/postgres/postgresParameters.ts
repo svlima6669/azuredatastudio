@@ -330,8 +330,8 @@ export abstract class PostgresParametersPage extends DashboardPage {
 		} else {
 			this.searchBox.enabled = true;
 			this.resetAllButton.enabled = true;
-			this.parameterContainer.addItem(this._parametersTable!);
 			this.refreshParametersTable();
+			this.parameterContainer.addItem(this._parametersTable!);
 		}
 	}
 
