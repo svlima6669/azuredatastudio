@@ -11,8 +11,6 @@ import { FileNotebookInput } from 'sql/workbench/contrib/notebook/browser/models
 import { INotebookService } from 'sql/workbench/services/notebook/browser/notebookService';
 import { Deferred } from 'sql/base/common/promise';
 import { ILogService } from 'vs/platform/log/common/log';
-import * as dom from 'vs/base/browser/dom';
-import { debounce } from 'vs/base/common/decorators';
 
 export class DiffNotebookInput extends SideBySideEditorInput {
 	public static ID: string = 'workbench.editorinputs.DiffNotebookInput';
@@ -76,44 +74,39 @@ export class DiffNotebookInput extends SideBySideEditorInput {
 				const modifiedScrollableNode = modifiedInput.container?.querySelector('.scrollable');
 
 				if (originalScrollableNode && modifiedScrollableNode) {
-					/*
-					dom.addDisposableThrottledListener(originalScrollableNode, 'scroll', () => {
-						console.log(`SCROLL ORIG ${originalScrollableNode.scrollTop} ${modifiedScrollableNode.scrollTop}`);
-						modifiedScrollableNode.scroll({ top: originalScrollableNode.scrollTop });
-					}, undefined, 100);
-					dom.addDisposableThrottledListener(modifiedScrollableNode, 'scroll', () => {
-						console.log(`SCROLL MOD ${originalScrollableNode.scrollTop} ${modifiedScrollableNode.scrollTop}`);
-						originalScrollableNode.scroll({ top: modifiedScrollableNode.scrollTop });
-					}, undefined, 100);
-					*/
-					let origTarget: number | undefined;
-					let modTarget: number | undefined;
+					let originalScrollNodeTarget: number | undefined;
+					let modifiedNodeScrollTarget: number | undefined;
 					originalScrollableNode.addEventListener('scroll', () => {
-						// console.log('ENTER ORIG');
-						if (origTarget !== undefined) {
-							if (origTarget === originalScrollableNode.scrollTop) {
-								origTarget = undefined;
+						// If we're currently in the process of scrolling this editor to sync it up with
+						// the other editor then ignore events until we reach our target scrollTop so
+						// that we don't cause a loop by telling the other editor to scroll back to
+						// the position of this editor
+						if (originalScrollNodeTarget !== undefined) {
+							if (originalScrollNodeTarget === originalScrollableNode.scrollTop) {
+								// We've reach out scroll target - clear this so we can start processing scroll
+								// events on this node again
+								originalScrollNodeTarget = undefined;
 							}
 							return;
 						}
-						modTarget = originalScrollableNode.scrollTop;
-						// console.log(`SCROLL ORIG ${originalScrollableNode.scrollTop} ${modifiedScrollableNode.scrollTop}`);
+						modifiedNodeScrollTarget = originalScrollableNode.scrollTop;
 						modifiedScrollableNode.scroll({ top: originalScrollableNode.scrollTop });
-						// modifiedScrollableNode.scrollTop = originalScrollableNode.scrollTop;
 					});
 					modifiedScrollableNode.addEventListener('scroll', () => {
-						//console.log('ENTER MOD');
-						if (modTarget !== undefined) {
-							if (modTarget === modifiedScrollableNode.scrollTop) {
-								modTarget = undefined;
+						// If we're currently in the process of scrolling this editor to sync it up with
+						// the other editor then ignore events until we reach our target scrollTop so
+						// that we don't cause a loop by telling the other editor to scroll back to
+						// the position of this editor
+						if (modifiedNodeScrollTarget !== undefined) {
+							if (modifiedNodeScrollTarget === modifiedScrollableNode.scrollTop) {
+								// We've reach out scroll target - clear this so we can start processing scroll
+								// events on this node again
+								modifiedNodeScrollTarget = undefined;
 							}
 							return;
 						}
-
-						origTarget = modifiedScrollableNode.scrollTop;
-						//console.log(`SCROLL MOD ${originalScrollableNode.scrollTop} ${modifiedScrollableNode.scrollTop}`);
+						originalScrollNodeTarget = modifiedScrollableNode.scrollTop;
 						originalScrollableNode.scroll({ top: modifiedScrollableNode.scrollTop });
-						// originalScrollableNode.scrollTop = modifiedScrollableNode.scrollTop;
 					});
 
 				}
