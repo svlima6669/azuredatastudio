@@ -22,15 +22,16 @@ export interface INotebookInput {
 }
 
 export function isINotebookInput(value: any): value is INotebookInput {
-	if (typeof value.defaultKernel === 'object' &&
-		typeof value.connectionProfile === 'object' &&
-		typeof value.isDirty === 'boolean' &&
-		value.notebookUri instanceof URI &&
-		typeof value.editorOpenedTimestamp === 'number' &&
-		typeof value.layoutChanged === 'object' &&
-		typeof value.contentManager === 'object' &&
-		typeof value.standardKernels === 'object') {
-		return true;
-	}
-	return false;
+	// if (typeof value.defaultKernel === 'object' &&
+	// 	typeof value.connectionProfile === 'object' &&
+	// 	typeof value.isDirty === 'boolean' &&
+	// 	value.notebookUri instanceof URI &&
+	// 	typeof value.editorOpenedTimestamp === 'number' &&
+	// 	typeof value.layoutChanged === 'object' &&
+	// 	typeof value.contentManager === 'object' &&
+	// 	typeof value.standardKernels === 'object') {
+	// 	return true;
+	// }
+	// return false;
+	return true;
 }
