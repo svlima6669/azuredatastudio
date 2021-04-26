@@ -4,13 +4,16 @@ set -e
 if [[ "$OSTYPE" == "darwin"* ]]; then
 	realpath() { [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"; }
 	ROOT=$(dirname $(dirname $(realpath "$0")))
+	VSCODEUSERDATADIR=`mktemp -d -t 'myuserdatadir'`
+	VSCODEEXTDIR=`mktemp -d -t 'myextdir'`
 else
 	ROOT=$(dirname $(dirname $(readlink -f $0)))
+	VSCODEUSERDATADIR=`mktemp -d 2>/dev/null`
+	VSCODEEXTDIR=`mktemp -d 2>/dev/null`
 	# Electron 6 introduces a chrome-sandbox that requires root to run. This can fail. Disable sandbox via --no-sandbox.
 	LINUX_EXTRA_ARGS="--no-sandbox"
 fi
 
-VSCODEUSERDATADIR=`mktemp -d 2>/dev/null`
 VSCODECRASHDIR=$ROOT/.build/crashes
 cd $ROOT
 
@@ -73,7 +76,7 @@ else
 	fi
 
 	echo "Storing crash reports into '$VSCODECRASHDIR'."
-	echo "Running integration tests with '$INTEGRATION_TEST_ELECTRON_PATH' as build."
+	echo "Running unit tests with '$INTEGRATION_TEST_ELECTRON_PATH' as build."
 fi
 
 if [ -z "$INTEGRATION_TEST_APP_NAME" ]; then
@@ -86,7 +89,7 @@ cd $ROOT
 echo "VSCODEUSERDATADIR : '$VSCODEUSERDATADIR'"
 echo "VSCODEEXTDIR : '$VSCODEEXTDIR'"
 
-ALL_PLATFORMS_API_TESTS_EXTRA_ARGS="--disable-telemetry --crash-reporter-directory=$VSCODECRASHDIR --no-cached-data --disable-updates --disable-keytar --disable-extensions --user-data-dir=$VSCODEUSERDATADIR --nogpu"
+ALL_PLATFORMS_API_TESTS_EXTRA_ARGS="--disable-telemetry --crash-reporter-directory=$VSCODECRASHDIR --no-cached-data --disable-updates --disable-keytar --user-data-dir=$VSCODEUSERDATADIR --extensions-dir=$VSCODEEXTDIR --nogpu"
 
 echo ***************************************************
 echo *** starting admin tool extension windows tests ***
